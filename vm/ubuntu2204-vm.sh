@@ -406,6 +406,10 @@ qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} 
   -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
 pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
+DISK_OPTS="size=${DISK_SIZE}"
+[ -n "$DISK_CACHE" ] && DISK_OPTS="${DISK_CACHE}${DISK_OPTS}"
+[ -n "$THIN" ] && DISK_OPTS="${THIN}${DISK_OPTS}"
+
 qm set $VMID \
   -efidisk0 ${DISK0_REF}${FORMAT} \
   -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=$DISK_SIZE \
