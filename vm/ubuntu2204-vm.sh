@@ -260,6 +260,17 @@ function advanced_settings() {
     exit-script
   fi
 
+  if DISK_SIZE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Allocate Disk Size in GB" 8 58 64 --title "DISK SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
+    if [ -z $DISK_SIZE ]; then
+      DISK_SIZE="64"
+      echo -e "${DGN}Allocated Disk Size: ${BGN}$DISK_SIZE${CL}"
+    else
+      echo -e "${DGN}Allocated Disk Size: ${BGN}$DISK_SIZE${CL}"
+    fi
+  else
+    exit-script
+  fi
+
   if BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a Bridge" 8 58 vmbr0 --title "BRIDGE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
     if [ -z $BRG ]; then
       BRG="vmbr0"
