@@ -145,7 +145,7 @@ function default_settings() {
   MTU=""
   START_VM="no"
   echo -e "${DGN}Using Virtual Machine ID: ${BGN}${VMID}${CL}"
-  echo -e "${DGN}Using Machine Type: ${BGN}i440fx${CL}"
+  echo -e "${DGN}Using Machine Type: ${BGN}q35${CL}"
   echo -e "${DGN}Using Disk Cache: ${BGN}None${CL}"
   echo -e "${DGN}Using Hostname: ${BGN}${HN}${CL}"
   echo -e "${DGN}Using CPU Model: ${BGN}KVM64${CL}"
@@ -178,8 +178,8 @@ function advanced_settings() {
   done
 
   if MACH=$(whiptail --backtitle "Proxmox VE Helper Scripts" --title "MACHINE TYPE" --radiolist --cancel-button Exit-Script "Choose Type" 10 58 2 \
-    "i440fx" "Machine i440fx" ON \
-    "q35" "Machine q35" OFF \
+    "i440fx" "Machine i440fx" OFF \
+    "q35" "Machine q35" ON \
     3>&1 1>&2 2>&3); then
     if [ $MACH = q35 ]; then
       echo -e "${DGN}Using Machine Type: ${BGN}$MACH${CL}"
@@ -406,6 +406,7 @@ qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} 
   -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
 pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
+
 DISK_OPTS="size=${DISK_SIZE}"
 [ -n "$DISK_CACHE" ] && DISK_OPTS="${DISK_CACHE}${DISK_OPTS}"
 [ -n "$THIN" ] && DISK_OPTS="${THIN}${DISK_OPTS}"
@@ -422,6 +423,7 @@ qm set $VMID \
 
   <a href='https://ko-fi.com/D1D7EP4GF'><img src='https://img.shields.io/badge/&#x2615;-Buy me a coffee-blue' /></a>
   </div>" >/dev/null
+  
 msg_ok "Created a Ubuntu 22.04 VM ${CL}${BL}(${HN})"
 if [ "$START_VM" == "yes" ]; then
   msg_info "Starting Ubuntu 22.04 VM"
