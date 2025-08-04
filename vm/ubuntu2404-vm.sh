@@ -138,6 +138,7 @@ function default_settings() {
   CPU_TYPE=""
   CORE_COUNT="2"
   RAM_SIZE="2048"
+  DISK_SIZE="64"
   BRG="vmbr0"
   MAC="$GEN_MAC"
   VLAN=""
@@ -149,6 +150,7 @@ function default_settings() {
   echo -e "${DGN}Using CPU Model: ${BGN}KVM64${CL}"
   echo -e "${DGN}Allocated Cores: ${BGN}${CORE_COUNT}${CL}"
   echo -e "${DGN}Allocated RAM: ${BGN}${RAM_SIZE}${CL}"
+  echo -e "${DGN}Allocated Disk Size: ${BGN}${DISK_SIZE}${CL}"
   echo -e "${DGN}Using Bridge: ${BGN}${BRG}${CL}"
   echo -e "${DGN}Using MAC Address: ${BGN}${MAC}${CL}"
   echo -e "${DGN}Using VLAN: ${BGN}Default${CL}"
@@ -250,6 +252,17 @@ function advanced_settings() {
       echo -e "${DGN}Allocated RAM: ${BGN}$RAM_SIZE${CL}"
     else
       echo -e "${DGN}Allocated RAM: ${BGN}$RAM_SIZE${CL}"
+    fi
+  else
+    exit-script
+  fi
+
+  if DISK_SIZE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Allocate Disk Size in GB" 8 58 64 --title "DISK SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
+    if [ -z $DISK_SIZE ]; then
+      DISK_SIZE="64"
+      echo -e "${DGN}Allocated Disk Size: ${BGN}$DISK_SIZE${CL}"
+    else
+      echo -e "${DGN}Allocated Disk Size: ${BGN}$DISK_SIZE${CL}"
     fi
   else
     exit-script
@@ -383,6 +396,13 @@ btrfs)
   FORMAT=",efitype=4m"
   THIN=""
   ;;
+lvmthin)
+  DISK_EXT=".raw"
+  DISK_REF="$VMID/"
+  DISK_IMPORT="-format raw"
+  FORMAT=",efitype=4m"
+  THIN="discard=on,ssd=1,"
+  ;;
 esac
 for i in {0,1}; do
   disk="DISK$i"
@@ -393,11 +413,22 @@ done
 msg_info "Creating a Ubuntu 24.04 VM"
 qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} -cores $CORE_COUNT -memory $RAM_SIZE \
   -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
-pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+
+# Only allocate storage for non-LVM thin storage types
+if [ "$STORAGE_TYPE" != "lvmthin" ]; then
+  pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+fi
+
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
+
+DISK_OPTS=""
+[ -n "$DISK_CACHE" ] && DISK_OPTS="${DISK_CACHE}${DISK_OPTS}"
+[ -n "$THIN" ] && DISK_OPTS="${THIN}${DISK_OPTS}"
+DISK_OPTS="${DISK_OPTS}size=${DISK_SIZE}"
+
 qm set $VMID \
   -efidisk0 ${DISK0_REF}${FORMAT} \
-  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=2G \
+  -scsi0 ${DISK1_REF},${DISK_OPTS} \
   -ide2 ${STORAGE}:cloudinit \
   -boot order=scsi0 \
   -serial0 socket \
