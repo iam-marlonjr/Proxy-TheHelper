@@ -412,7 +412,7 @@ DISK_OPTS="size=${DISK_SIZE}"
 
 qm set $VMID \
   -efidisk0 ${DISK0_REF}${FORMAT} \
-  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=$DISK_SIZE \
+  -scsi0 ${DISK1_REF},${DISK_OPTS} \
   -ide2 ${STORAGE}:cloudinit \
   -boot order=scsi0 \
   -serial0 socket \
