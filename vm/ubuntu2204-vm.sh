@@ -136,11 +136,12 @@ function default_settings() {
   DISK_CACHE=""
   HN="ubuntu"
   CPU_TYPE=""
-  CORE_COUNT="2"
-  RAM_SIZE="2048"
+  CORE_COUNT="4"
+  RAM_SIZE="8192"
   BRG="vmbr0"
   MAC="$GEN_MAC"
   VLAN=""
+  DISK_SIZE="64"
   MTU=""
   START_VM="no"
   echo -e "${DGN}Using Virtual Machine ID: ${BGN}${VMID}${CL}"
@@ -407,7 +408,7 @@ pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
 qm set $VMID \
   -efidisk0 ${DISK0_REF}${FORMAT} \
-  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=2G \
+  -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=$DISK_SIZE \
   -ide2 ${STORAGE}:cloudinit \
   -boot order=scsi0 \
   -serial0 socket \
