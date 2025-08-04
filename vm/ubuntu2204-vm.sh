@@ -60,6 +60,8 @@ function cleanup() {
 
 TEMP_DIR=$(mktemp -d)
 pushd $TEMP_DIR >/dev/null
+
+STORAGE="local-lvm"
 if whiptail --backtitle "Proxmox VE Helper Scripts" --title "Ubuntu 22.04 VM" --yesno "This will create a New Ubuntu 22.04 VM. Proceed?" 10 58; then
   :
 else
