@@ -396,6 +396,13 @@ btrfs)
   FORMAT=",efitype=4m"
   THIN=""
   ;;
+lvmthin)
+  DISK_EXT=".raw"
+  DISK_REF="$VMID/"
+  DISK_IMPORT="-format raw"
+  FORMAT=",efitype=4m"
+  THIN="discard=on,ssd=1,"
+  ;;
 esac
 for i in {0,1}; do
   disk="DISK$i"
@@ -406,7 +413,12 @@ done
 msg_info "Creating a Ubuntu 22.04 VM"
 qm create $VMID -agent 1${MACHINE} -tablet 0 -localtime 1 -bios ovmf${CPU_TYPE} -cores $CORE_COUNT -memory $RAM_SIZE \
   -name $HN -tags proxmox-helper-scripts -net0 virtio,bridge=$BRG,macaddr=$MAC$VLAN$MTU -onboot 1 -ostype l26 -scsihw virtio-scsi-pci
-pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+
+# Only allocate storage for non-LVM thin storage types
+if [ "$STORAGE_TYPE" != "lvmthin" ]; then
+  pvesm alloc $STORAGE $VMID $DISK0 4M 1>&/dev/null
+fi
+
 qm importdisk $VMID ${FILE} $STORAGE ${DISK_IMPORT:-} 1>&/dev/null
 
 DISK_OPTS=""
